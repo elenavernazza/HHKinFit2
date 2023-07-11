@@ -54,37 +54,37 @@ class HHKinFitMasterHeavyHiggs{
   
   //Getters for fit results
   double getChi2(HHFitHypothesisHeavyHiggs hypo);
-  double getChi2(int mh1 = 125, int mh2 = 125);
+  double getChi2(int mh1 = 91, int mh2 = 91);
 
   double getChi2BJet1(HHFitHypothesisHeavyHiggs hypo);
-  double getChi2BJet1(int mh1 = 125, int mh2 = 125);
+  double getChi2BJet1(int mh1 = 91, int mh2 = 91);
 
   double getChi2BJet2(HHFitHypothesisHeavyHiggs hypo);
-  double getChi2BJet2(int mh1 = 125, int mh2 = 125);
+  double getChi2BJet2(int mh1 = 91, int mh2 = 91);
     
   double getChi2Balance(HHFitHypothesisHeavyHiggs hypo);
-  double getChi2Balance(int mh1 = 125, int mh2 = 125);
+  double getChi2Balance(int mh1 = 91, int mh2 = 91);
   
   double getFitProb(HHFitHypothesisHeavyHiggs hypo);
-  double getFitProb(int mh1 = 125, int mh2 = 125);
+  double getFitProb(int mh1 = 91, int mh2 = 91);
   
   double getMH(HHFitHypothesisHeavyHiggs hypo);
-  double getMH(int mh1 = 125, int mh2 = 125);
+  double getMH(int mh1 = 91, int mh2 = 91);
 
   int getConvergence(HHFitHypothesisHeavyHiggs hypo);
-  int getConvergence(int mh1 = 125, int mh2 = 125);
+  int getConvergence(int mh1 = 91, int mh2 = 91);
 
   TLorentzVector getFittedTau1(HHFitHypothesisHeavyHiggs hypo);
-  TLorentzVector getFittedTau1(int mh1 = 125, int mh2 = 125);
+  TLorentzVector getFittedTau1(int mh1 = 91, int mh2 = 91);
 
   TLorentzVector getFittedTau2(HHFitHypothesisHeavyHiggs hypo);
-  TLorentzVector getFittedTau2(int mh1 = 125, int mh2 = 125);
+  TLorentzVector getFittedTau2(int mh1 = 91, int mh2 = 91);
 
   TLorentzVector getFittedBJet1(HHFitHypothesisHeavyHiggs hypo);
-  TLorentzVector getFittedBJet1(int mh1 = 125, int mh2 = 125);
+  TLorentzVector getFittedBJet1(int mh1 = 91, int mh2 = 91);
   
   TLorentzVector getFittedBJet2(HHFitHypothesisHeavyHiggs hypo);
-  TLorentzVector getFittedBJet2(int mh1 = 125, int mh2 = 125);
+  TLorentzVector getFittedBJet2(int mh1 = 91, int mh2 = 91);
     
   //For Gen Studies to check smearing
   TLorentzVector getUnfittedBJet1(){return(m_bjet1);};
