@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <iterator>
 #include <sstream>
+#include <memory>
 
 HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(TLorentzVector const& bjet1, 
                                                               TLorentzVector const& bjet2, 
@@ -130,7 +131,7 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(TLorentzVector con
     m_bjet2.SetPtEtaPhiE(bjet2_Pt, m_bjet2.Eta(), m_bjet2.Phi(), bjet2_E);
     //m_bjet2_COV = bjet2Cov;
     */
-    TF1* crystalBall = new TF1("crystalBall", crystalBallLikePDFROOT, 0.0, 10.0, 6);
+    std::unique_ptr<TF1> crystalBall = std::make_unique<TF1>("crystalBall", crystalBallLikePDFROOT, 0.0, 10.0, 6);
     crystalBall->SetParameter(0,2.06421);
     crystalBall->SetParameter(1,99.92);
     crystalBall->SetParameter(2,0.17);
@@ -146,8 +147,8 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(TLorentzVector con
     */
 
     TRandom3 r(0);
-    gRandom = new TRandom3(0);
-    Double_t randomSmear = crystalBall->GetRandom();
+    //gRandom = new TRandom3(0); // commented to avoid leaking memory
+    Double_t randomSmear = crystalBall->GetRandom(&r);
     if(randomSmear < 0.1)
     {
       randomSmear = 0.1;
@@ -162,7 +163,7 @@ HHKinFit2::HHKinFitMasterHeavyHiggs::HHKinFitMasterHeavyHiggs(TLorentzVector con
     Double_t bjet1_P  = sqrt(pow(bjet1_E,2) - pow(m_bjet1.M(),2));
     Double_t bjet1_Pt = sin(m_bjet1.Theta())*bjet1_P;    
     m_bjet1.SetPtEtaPhiE(bjet1_Pt, m_bjet1.Eta(), m_bjet1.Phi(), bjet1_E);
-    randomSmear = crystalBall->GetRandom();
+    randomSmear = crystalBall->GetRandom(&r);
     if(randomSmear < 0.1)
     {
       randomSmear = 0.1;
@@ -221,8 +222,8 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
 
   for(unsigned int i = 0; i < m_hypos.size(); ++i)
   { 
-    HHFitObjectE* tau1Fit = new HHFitObjectEConstM(m_tauvis1);
-    HHFitObjectE* tau2Fit = new HHFitObjectEConstM(m_tauvis2);
+    std::unique_ptr<HHFitObjectE> tau1Fit = std::make_unique<HHFitObjectEConstM>(m_tauvis1);
+    std::unique_ptr<HHFitObjectE> tau2Fit = std::make_unique<HHFitObjectEConstM>(m_tauvis2);
 
     double bJet1Emin;
     HHLorentzVector bJet2min = m_bjet2;
@@ -235,18 +236,18 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
     HHLorentzVector tau2min = m_tauvis2;
     tau2min.SetEkeepM(0.9*m_tauvis2.E());
 
-    HHFitObjectE* b1Fit = new HHFitObjectEConstBeta(m_bjet1);
-    HHFitObjectE* b2Fit = new HHFitObjectEConstBeta(m_bjet2);
+    std::unique_ptr<HHFitObjectE> b1Fit = std::make_unique<HHFitObjectEConstBeta>(m_bjet1);
+    std::unique_ptr<HHFitObjectE> b2Fit = std::make_unique<HHFitObjectEConstBeta>(m_bjet2);
   
     //prepare MET object
-    HHFitObjectMET* metFit = new HHFitObjectMET(m_MET);
+    std::unique_ptr<HHFitObjectMET> metFit = std::make_unique<HHFitObjectMET>(m_MET);
 
     //prepare composite object: Higgs
-    HHFitObject* heavyHiggs  = new HHFitObjectComposite(tau1Fit, tau2Fit, 
-							b1Fit, b2Fit,
-							metFit);
-    HHFitObject* higgs1  = new HHFitObjectComposite(tau1Fit, tau2Fit);  
-    HHFitObject* higgs2  = new HHFitObjectComposite(b1Fit, b2Fit);
+    std::unique_ptr<HHFitObject> heavyHiggs  = std::make_unique<HHFitObjectComposite>(tau1Fit.get(), tau2Fit.get(), 
+							b1Fit.get(), b2Fit.get(),
+							metFit.get());
+    std::unique_ptr<HHFitObject> higgs1  = std::make_unique<HHFitObjectComposite>(tau1Fit.get(), tau2Fit.get());  
+    std::unique_ptr<HHFitObject> higgs2  = std::make_unique<HHFitObjectComposite>(b1Fit.get(), b2Fit.get());
 
     int mh1 = m_hypos[i].first;
     int mh2 = m_hypos[i].second;
@@ -258,9 +259,9 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
     }
     catch(HHLimitSettingException const& e)
     {
-      std::cout << "Exception while setting tau limits:" << std::endl;
-      std::cout << e.what() << std::endl;
-      std::cout << "Tau energies are not compatible with invariant mass constraint." << std::endl;
+      //std::cout << "Exception while setting tau limits:" << std::endl;
+      //std::cout << e.what() << std::endl;
+      //std::cout << "Tau energies are not compatible with invariant mass constraint." << std::endl;
 
       m_map_chi2[m_hypos[i]] = -pow(10,10);
       m_map_prob[m_hypos[i]] = -pow(10,10);
@@ -314,33 +315,33 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
     heavyHiggs->setCovMatrix(m_MET_COV);// - m_bjet1_COV - m_bjet2_COV);
 
     //prepare constraints
-    HHFitConstraint* c_invmh1 = new HHFitConstraintEHardM(tau1Fit, tau2Fit, mh1);
-    HHFitConstraint* c_invmh2 = new HHFitConstraintEHardM(b1Fit, b2Fit, mh2);
+    std::unique_ptr<HHFitConstraint> c_invmh1 = std::make_unique<HHFitConstraintEHardM>(tau1Fit.get(), tau2Fit.get(), mh1);
+    std::unique_ptr<HHFitConstraint> c_invmh2 = std::make_unique<HHFitConstraintEHardM>(b1Fit.get(), b2Fit.get(), mh2);
     
 
-    HHFitConstraint* c_b1;
-    HHFitConstraint* c_b2;
+    std::unique_ptr<HHFitConstraint> c_b1;
+    std::unique_ptr<HHFitConstraint> c_b2;
     if(m_useAdveancedBJetChi2)
     {
-       c_b1 = new HHFitConstraint4VectorBJet(b1Fit);
-       c_b2 = new HHFitConstraint4VectorBJet(b2Fit);
+       c_b1 = std::make_unique<HHFitConstraint4VectorBJet>(b1Fit.get());
+       c_b2 = std::make_unique<HHFitConstraint4VectorBJet>(b2Fit.get());
     }
     else
     {
-      c_b1 = new HHFitConstraint4Vector(b1Fit, false, false, 
+      c_b1 = std::make_unique<HHFitConstraint4Vector>(b1Fit.get(), false, false, 
 					false, true);
-      c_b2 = new HHFitConstraint4Vector(b2Fit, false, false, 
+      c_b2 = std::make_unique<HHFitConstraint4Vector>(b2Fit.get(), false, false, 
 					false, true);
     }
 //   HHFitConstraint* c_b1 = new HHFitConstraint4VectorBJet(b1Fit, 2.06421, 99.92,
 //							   0.17, 1.15, 0.466, 1.608);
 //    HHFitConstraint* c_b2 = new HHFitConstraint4VectorBJet(b2Fit, 2.06421, 99.92,
 //							   0.17, 1.15, 0.466, 1.608);
-    HHFitConstraint* c_balance = new HHFitConstraint4Vector(heavyHiggs, true, true, 
+    std::unique_ptr<HHFitConstraint> c_balance = std::make_unique<HHFitConstraint4Vector>(heavyHiggs.get(), true, true, 
 							    false, false);
 
     //fit
-    HHKinFit2::HHKinFit* fitObject = new HHKinFit2::HHKinFit();
+    std::unique_ptr<HHKinFit2::HHKinFit> fitObject = std::make_unique<HHKinFit2::HHKinFit>();
 
 
     tau1Fit->setInitDirection(1.0);
@@ -354,14 +355,14 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
     b1Fit->setInitStart( 0.9*b1Fit->getInitial4Vector().E());
     b1Fit->setInitDirection(-1.0);
 
-    fitObject->addFitObjectE(b1Fit);
-    fitObject->addFitObjectE(tau1Fit);
+    fitObject->addFitObjectE(b1Fit.get());
+    fitObject->addFitObjectE(tau1Fit.get());
 
-    fitObject->addConstraint(c_invmh1);
-    fitObject->addConstraint(c_invmh2);
-    fitObject->addConstraint(c_b1);
-    fitObject->addConstraint(c_b2);
-    fitObject->addConstraint(c_balance);
+    fitObject->addConstraint(c_invmh1.get());
+    fitObject->addConstraint(c_invmh2.get());
+    fitObject->addConstraint(c_b1.get());
+    fitObject->addConstraint(c_b2.get());
+    fitObject->addConstraint(c_balance.get());
 
     /*
     //For Chi2Map
@@ -791,22 +792,22 @@ void HHKinFit2::HHKinFitMasterHeavyHiggs::fit()
       m_map_fittedB2[m_hypos[i]]= fittedB2;
     }
 
-    delete c_invmh1;
-    delete c_invmh2;
-    delete c_b1;
-    delete c_b2;
-    delete c_balance;
+    // delete c_invmh1;
+    // delete c_invmh2;
+    // delete c_b1;
+    // delete c_b2;
+    // delete c_balance;
     
-    delete fitObject;
+    // delete fitObject;
    
-    delete tau1Fit;
-    delete tau2Fit;
-    delete b1Fit;
-    delete b2Fit;
-    delete metFit;
-    delete heavyHiggs;
-    delete higgs1;
-    delete higgs2;
+    // delete tau1Fit;
+    // delete tau2Fit;
+    // delete b1Fit;
+    // delete b2Fit;
+    // delete metFit;
+    // delete heavyHiggs;
+    // delete higgs1;
+    // delete higgs2;
   }
 }
 

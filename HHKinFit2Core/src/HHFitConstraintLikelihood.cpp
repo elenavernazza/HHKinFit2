@@ -190,10 +190,10 @@ HHKinFit2::HHFitConstraintLikelihood::getLikelihood() const{
 		return(m_likelihood1->Eval(m_fitobject->getInitial4Vector().E()/m_fitobject->getFit4Vector().E())*m_likelihood2->Eval(m_object2->getInitial4Vector().E()/m_object2->getFit4Vector().E()));
 	}
 	if(mode==2){
-		TSpline3* temp1=new TSpline3(m_likelihoodhisto1);
-		TSpline3* temp2=new TSpline3(m_likelihoodhisto2);
-		double x1=temp1->Eval(m_fitobject->getInitial4Vector().E()/m_fitobject->getFit4Vector().E());
-		double x2=temp2->Eval(m_object2->getInitial4Vector().E()/m_object2->getFit4Vector().E());
+		TSpline3 temp1(m_likelihoodhisto1);
+		TSpline3 temp2(m_likelihoodhisto2);
+		double x1=temp1.Eval(m_fitobject->getInitial4Vector().E()/m_fitobject->getFit4Vector().E());
+		double x2=temp2.Eval(m_object2->getInitial4Vector().E()/m_object2->getFit4Vector().E());
         return(x1*x2);
 	}
 	if(mode==3){
