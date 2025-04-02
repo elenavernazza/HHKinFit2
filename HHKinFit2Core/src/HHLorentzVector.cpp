@@ -59,7 +59,7 @@ HHKinFit2::HHLorentzVector::SetEkeepM(double E){
   }
   
   double pnew = sqrt(pow(E,2)-pow(M(),2));
-  if (isnan(pnew)) {
+  if (std::isnan(pnew)) {
       std::cout << "WARNING: SetEkeepM(): Targeted E is smaller than m. Set P=1, E=sqrt(m**2+1**2)" << std::endl;
       std::cout << "E: " << E << std::endl;
       std::cout << "M: " << M() << std::endl;

@@ -17,6 +17,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <cmath>
 
 HHKinFit2::HHKinFitPS::HHKinFitPS()
 : m_fitobjects(std::vector<HHFitObjectE*>()),
@@ -109,7 +110,7 @@ HHKinFit2::HHKinFitPS::fit(){
     bool respectLimits = (iter>=0) ; // do not respect limits when calculating numerical derivative
     for (unsigned int i=0; i<m_fitobjects.size();i++){
       try{
-	if(isnan(a[i]))
+	if(std::isnan(a[i]))
 	{
 	  std::cout << "WARNING! PSMath changed E of fit object " << i 
 		    << "to NAN!" << std::endl;
